@@ -1,0 +1,16 @@
+{
+  "errores": {
+    "W-01": {
+      "descripcion": "El depósito de tinta de desecho está casi lleno.",
+      "solucion": "Debe prepararse para reemplazar las almohadillas. Puede continuar imprimiendo temporalmente presionando el botón de reanudar."
+    },
+    "E-11": {
+      "descripcion": "El depósito de tinta de desecho está lleno (Almohadillas al 100%).",
+      "solucion": "Es necesario reemplazar las almohadillas y resetear el contador de las mismas utilizando el software."
+    },
+    "E-01": {
+      "descripcion": "Error fatal (atasco de carro, papel o problema de placa).",
+      "solucion": "Apague la impresora, revise que no haya papel atascado ni objetos extraños bloqueando el carro de impresión. Si el problema persiste, puede ser un daño de hardware."
+    }
+  }
+}
