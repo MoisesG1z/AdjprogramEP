@@ -1,0 +1,20 @@
+*** COPIA Y PEGA TODO ESTE TEXTO EN TU NUEVA SESIÓN CON LA IA ***
+
+[CONTEXTO DEL PROYECTO PARA LA IA]
+Hola IA, soy el usuario. Esta es la continuación de una sesión previa en la que estamos desarrollando un programa en Python (PyQt5 y pyusb) para gestionar impresoras Epson Serie L (específicamente probando con una L3110/L3150, Vendor ID 0x04B8, Product ID 0x130a).
+El programa debe tener las utilidades de un "Adjustment Program" (WIC Reset): test de inyectores, lectura de almohadillas (EEPROM), analizador de errores, etc.
+
+[ESTADO ACTUAL]
+1. Ya tenemos la interfaz gráfica (`main.py`) con pestañas para Mantenimiento, Estado, Almohadillas y Errores.
+2. Ya tenemos el script de comunicación de bajo nivel (`usb_manager.py`) que usa `pyusb` para comunicarse por los Endpoints IN y OUT.
+3. El programa logra detectar la impresora y abrir el puerto de comunicación exitosamente.
+4. Hemos comprobado que el envío de bytes funciona (ej. enviando el comando de inicialización `\x1B\x40`).
+5. EL PROBLEMA: Los comandos genéricos de ESC/P-R que probamos para "Test de Inyectores" y lectura de "Almohadillas" no funcionan porque esta impresora requiere comandos específicos y propietarios de Epson (a menudo requieren paquetes de "Remote Mode" exactos o secuencias no documentadas).
+
+[EL SIGUIENTE PASO INMEDIATO]
+Fui a una PC con Windows que tiene los drivers oficiales de Epson instalados. Usé Wireshark con USBPcap para hacer "USB Sniffing" (ingeniería inversa) e interceptar el tráfico USB mientras le daba a la opción "Test de inyectores" en el software oficial de la impresora.
+Ya capturé el paquete `URB_BULK out` exacto y tengo el "Hex Stream" (los bytes hexadecimales) que la PC le envía a la impresora.
+
+Mi objetivo en esta sesión es entregarte ese código hexadecimal capturado para que lo incorpores a la función `do_nozzle_check()` en el archivo `usb_manager.py` y lograr que la impresora finalmente ejecute la acción.
+
+¡Por favor, confirma que has entendido este contexto y dime que estás listo para recibir el código hexadecimal que extraje de Wireshark!
