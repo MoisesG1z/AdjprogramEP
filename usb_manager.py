@@ -1,6 +1,8 @@
 import usb.core
 import usb.util
+import usb.backend.libusb1
 import time
+import os
 
 class EpsonUSBManager:
     """
@@ -16,13 +18,21 @@ class EpsonUSBManager:
 
     def find_and_connect(self, product_id=None):
         try:
+            # Buscar el backend de libusb1 explícitamente en el directorio actual
+            # Esto soluciona el error "No backend available" en Windows
+            dll_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'libusb-1.0.dll')
+            if not os.path.exists(dll_path):
+                return False, f"Falta el archivo libusb-1.0.dll en {dll_path}. Descárgalo de libusb.info y colócalo ahí."
+            
+            backend = usb.backend.libusb1.get_backend(find_library=lambda x: dll_path)
+            
             if product_id:
-                self.device = usb.core.find(idVendor=self.EPSON_VENDOR_ID, idProduct=product_id)
+                self.device = usb.core.find(idVendor=self.EPSON_VENDOR_ID, idProduct=product_id, backend=backend)
             else:
-                self.device = usb.core.find(idVendor=self.EPSON_VENDOR_ID)
+                self.device = usb.core.find(idVendor=self.EPSON_VENDOR_ID, backend=backend)
                 
             if self.device is None:
-                return False, "No se encontró ninguna impresora Epson conectada."
+                return False, "No se encontró ninguna impresora Epson conectada (o Zadig no ha instalado WinUSB)."
 
             if self.device.is_kernel_driver_active(0):
                 self.device.detach_kernel_driver(0)
@@ -75,29 +85,23 @@ class EpsonUSBManager:
     def do_nozzle_check(self):
         """
         Envía una secuencia completa para el Test de Inyectores.
-        Añadido envoltorio de paquete (Job) estándar ESC/P.
+        Utiliza el comando hexadecimal exacto capturado con Wireshark.
         """
-        # Muchas impresoras modernas ignoran comandos crudos si no están empaquetados como un trabajo de impresión.
+        # Secuencia hexadecimal capturada directamente del driver de Epson
+        hex_payload = "0000001b0140454a4c20313238342e340a40454a4c20202020200a1b401b401b285208000052454d4f544531544908000007ea051f1401364a530400000000004e43020000001b0000000d0a0d0a1b285208000052454d4f5445315649020000004c4400001b0000000c1b401b401b285208000052454d4f5445314a450100001b000000"
         
-        # 1. Comando de inicialización (Limpiar estado)
-        self.send_command(b'\x1B\x40')
-        time.sleep(0.1)
-
-        # 2. Comando ESC/P-R para cambiar a modo de control remoto / diagnóstico (Remote mode)
-        # Esto le dice a la impresora "voy a enviarte un comando de mantenimiento, no un texto para imprimir"
-        remote_mode_cmd = b'\x1B\x28\x52\x08\x00\x00\x4E\x43\x01\x00\x00\x00\x00\x00\x00'
-        self.send_command(remote_mode_cmd)
-        time.sleep(0.1)
-
-        # 3. Comando específico de Nozzle Check para modelos L-Series
-        nozzle_cmd = b'\x1B\x28\x65\x02\x00\x02\x01'
-        success, msg = self.send_command(nozzle_cmd)
-        
-        # 4. Finalizar modo de control remoto
-        exit_remote_cmd = b'\x1B\x28\x52\x08\x00\x00\x45\x58\x00\x00\x00\x00\x00\x00\x00'
-        self.send_command(exit_remote_cmd)
-        
-        return success, msg
+        try:
+            # Convertimos el texto hex a bytes (ej. '1b' -> b'\x1B')
+            byte_command = bytes.fromhex(hex_payload)
+            success, msg = self.send_command(byte_command)
+            
+            if success:
+                return True, "Comando de Test de Inyectores enviado con éxito."
+            else:
+                return False, msg
+                
+        except ValueError as e:
+            return False, f"Error al procesar el código hexadecimal: {str(e)}"
 
     def analyze_printer(self):
         """

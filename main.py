@@ -10,6 +10,22 @@ from usb_manager import EpsonUSBManager
 class AdjProgramApp(QMainWindow):
     def __init__(self):
         super().__init__()
+        
+        # Declaración de atributos de instancia en __init__ para buenas prácticas
+        self.printer_list = None
+        self.btn_detect = None
+        self.tabs = None
+        self.tab_status = None
+        self.tab_maintenance = None
+        self.tab_pads = None
+        self.tab_errors = None
+        self.lbl_status = None
+        self.btn_nozzle = None
+        self.pad_progress = None
+        self.btn_read_pads = None
+        self.error_display = None
+        self.btn_diagnose = None
+
         self.setWindowTitle("Epson L-Series Management Utility")
         self.resize(800, 600)
 
